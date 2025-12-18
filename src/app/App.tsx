@@ -98,7 +98,7 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <img src="/static/logo-light.png" alt="Old-Net Logo" className="w-40 h-40 mx-auto mb-8" />
+              <img src={"/logo-light.png"} alt="Old-Net Logo" className="w-40 h-40 mx-auto mb-8" />
             </motion.div>
             <motion.h1 
               className="text-5xl md:text-7xl font-light tracking-tight mb-6"
