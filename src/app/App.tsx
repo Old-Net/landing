@@ -1,13 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import logo from 'figma:asset/df228fde09ba2823666e4e500095297653f3dce9.png';
 
 export default function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 3;
+  const totalSlides = 4;
   const isScrolling = useRef(false);
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 768px)').matches;
+  });
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+
+    const handleChange = () => {
+      setIsDesktop(mediaQuery.matches);
+    };
+
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+
     const handleWheel = (e: WheelEvent) => {
       if (isScrolling.current) return;
 
@@ -30,27 +48,49 @@ export default function App() {
 
     window.addEventListener('wheel', handleWheel, { passive: true });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [currentSlide]);
+  }, [currentSlide, isDesktop]);
+
+  const scrollToSlide = (index: number) => {
+    if (isDesktop) {
+      setCurrentSlide(index);
+      return;
+    }
+
+    slideRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index);
+    scrollToSlide(index);
+  };
+
+  const goToTrySlide = () => {
+    scrollToSlide(totalSlides - 1);
   };
 
   const scrollToNext = () => {
-    if (currentSlide < totalSlides - 1) {
-      setCurrentSlide(currentSlide + 1);
-    }
+    scrollToSlide(1);
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden relative">
+    <div
+      className={`bg-black text-white relative ${
+        isDesktop ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden'
+      }`}
+    >
       {/* Vertical Slider Container */}
-      <div className="relative h-full w-full">
+      <div className={isDesktop ? 'relative h-full w-full' : 'w-full'}>
         {/* Slide 1: Hero */}
-        <div 
-          className={`absolute inset-0 h-full w-full flex items-center justify-center px-8 transition-opacity duration-1000 ${
-            currentSlide === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
+        <div
+          ref={(el) => {
+            slideRefs.current[0] = el;
+          }}
+          className={
+            isDesktop
+              ? `absolute inset-0 h-full w-full flex items-center justify-center px-8 transition-opacity duration-1000 ${
+                  currentSlide === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`
+              : 'relative min-h-screen w-full flex items-center justify-center px-6 py-16'
+          }
         >
           <div className="max-w-4xl mx-auto text-center">
             <motion.div 
@@ -59,10 +99,10 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <img src={logo} alt="Old-Net Logo" className="w-40 h-40 mx-auto mb-8" />
+              <img src={'/static/logo-light.png'} alt="Old-Net Logo" className="w-40 h-40 mx-auto mb-8" />
             </motion.div>
             <motion.h1 
-              className="text-7xl font-light tracking-tight mb-6"
+              className="text-5xl md:text-7xl font-light tracking-tight mb-6"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
@@ -70,14 +110,15 @@ export default function App() {
               Old-Net
             </motion.h1>
             <motion.p 
-              className="text-2xl text-gray-400 font-light mb-12"
+              className="text-lg md:text-2xl text-gray-400 font-light mb-12"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               Свобода интернета без границ
             </motion.p>
-            <motion.button
+             <div className="grid grid-rows-2 md:grid-rows-2 gap-4 text-center">
+              <motion.button
               onClick={scrollToNext}
               className="bg-primary hover:bg-red-600 text-white px-8 py-4 rounded-full transition-all duration-300 hover:scale-105"
               initial={{ y: 20, opacity: 0 }}
@@ -88,17 +129,37 @@ export default function App() {
             >
               Узнать больше
             </motion.button>
+            <motion.button
+              onClick={goToTrySlide}
+              className="bg-primary hover:bg-red-600 text-white px-8 py-4 rounded-full transition-all duration-300 hover:scale-105"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Попробовать бесплатно
+            </motion.button>
+             </div>
+            
           </div>
         </div>
 
         {/* Slide 2: About Service */}
-        <div 
-          className={`absolute inset-0 h-full w-full flex items-center justify-center px-8 transition-opacity duration-1000 ${
-            currentSlide === 1 ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
+        <div
+          ref={(el) => {
+            slideRefs.current[1] = el;
+          }}
+          className={
+            isDesktop
+              ? `absolute inset-0 h-full w-full flex items-center justify-center px-8 transition-opacity duration-1000 ${
+                  currentSlide === 1 ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`
+              : 'relative min-h-screen w-full flex items-center justify-center px-6 py-16'
+          }
         >
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-5xl font-light tracking-tight mb-16 text-center">
+            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-10 md:mb-16 text-center">
               О сервисе
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
@@ -162,13 +223,20 @@ export default function App() {
         </div>
 
         {/* Slide 3: Pricing */}
-        <div 
-          className={`absolute inset-0 h-full w-full flex items-center justify-center px-8 py-8 transition-opacity duration-1000 ${
-            currentSlide === 2 ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
+        <div
+          ref={(el) => {
+            slideRefs.current[2] = el;
+          }}
+          className={
+            isDesktop
+              ? `absolute inset-0 h-full w-full flex items-center justify-center px-8 py-8 transition-opacity duration-1000 ${
+                  currentSlide === 2 ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`
+              : 'relative min-h-screen w-full flex items-center justify-center px-6 py-16'
+          }
         >
           <div className="max-w-6xl mx-auto w-full">
-            <h2 className="text-5xl font-light tracking-tight mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-10 md:mb-12 text-center">
               Тарифные планы
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -182,6 +250,7 @@ export default function App() {
                   <div className="text-3xl font-light text-primary mb-2">Бесплатно</div>
                 </div>
                 <motion.button 
+                  onClick={goToTrySlide}
                   className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-full transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -200,6 +269,7 @@ export default function App() {
                   <div className="text-3xl font-light text-primary mb-2">50₽</div>
                 </div>
                 <motion.button 
+                  onClick={goToTrySlide}
                   className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-full transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -221,6 +291,7 @@ export default function App() {
                   <div className="text-3xl font-light text-primary mb-2">150₽</div>
                 </div>
                 <motion.button 
+                  onClick={goToTrySlide}
                   className="w-full bg-primary hover:bg-red-600 text-white py-3 rounded-full transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -240,6 +311,7 @@ export default function App() {
                   <p className="text-xs text-gray-500">Выгода 20%</p>
                 </div>
                 <motion.button 
+                  onClick={goToTrySlide}
                   className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-full transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -257,23 +329,124 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Slide 4: Try */}
+        <div
+          ref={(el) => {
+            slideRefs.current[3] = el;
+          }}
+          className={
+            isDesktop
+              ? `absolute inset-0 h-full w-full flex items-center justify-center px-8 py-8 transition-opacity duration-1000 ${
+                  currentSlide === 3 ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`
+              : 'relative min-h-screen w-full flex items-center justify-center px-6 py-16'
+          }
+        >
+          <div className="max-w-5xl mx-auto w-full">
+            <motion.h2
+              className="text-4xl md:text-5xl font-light tracking-tight mb-4 text-center"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              Попробовать
+            </motion.h2>
+            <motion.p
+              className="text-gray-400 text-lg font-light mb-10 text-center"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              Откройте Telegram-бота, получите конфигурацию и подключитесь за пару минут.
+            </motion.p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <motion.div
+                className="bg-secondary p-8 rounded-3xl border border-white/10 hover:border-primary/50 transition-all duration-300"
+                whileHover={{ scale: 1.02, y: -5 }}
+              >
+                <div className="text-primary text-4xl mb-4">1</div>
+                <h3 className="text-2xl mb-3">Открыть бота</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Перейдите по ссылке и нажмите Start — бот подскажет следующие шаги.
+                </p>
+              </motion.div>
+              <motion.div
+                className="bg-secondary p-8 rounded-3xl border border-white/10 hover:border-primary/50 transition-all duration-300"
+                whileHover={{ scale: 1.02, y: -5 }}
+              >
+                <div className="text-primary text-4xl mb-4">2</div>
+                <h3 className="text-2xl mb-3">Выбрать тариф</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Подберите подходящий период и оплатите внутри Telegram.
+                </p>
+              </motion.div>
+              <motion.div
+                className="bg-secondary p-8 rounded-3xl border border-white/10 hover:border-primary/50 transition-all duration-300"
+                whileHover={{ scale: 1.02, y: -5 }}
+              >
+                <div className="text-primary text-4xl mb-4">3</div>
+                <h3 className="text-2xl mb-3">Подключиться</h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Скопируйте конфиг или QR-код в ваш клиент — и вы онлайн.
+                </p>
+              </motion.div>
+            </div>
+
+            <div className="bg-secondary p-8 rounded-3xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl mb-2">Готовы начать?</h3>
+                <p className="text-gray-400">
+                  Если возникнут вопросы — поддержка в Telegram отвечает быстро.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <motion.a
+                  href="https://t.me/oldnetbot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-primary hover:bg-red-600 text-white px-8 py-4 rounded-full transition-all duration-300 text-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Open Old-Net Telegram bot"
+                >
+                  Открыть бота
+                </motion.a>
+                <motion.a
+                  href="https://t.me/oldnetsupport"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full transition-all duration-300 text-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Open Old-Net support"
+                >
+                  Поддержка
+                </motion.a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Side Dot Navigation */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-        {[...Array(totalSlides)].map((_, index) => (
-          <motion.button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              currentSlide === index ? 'bg-primary h-8' : 'bg-white/30 hover:bg-white/50'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-          />
-        ))}
-      </div>
+      {isDesktop && (
+        <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+          {[...Array(totalSlides)].map((_, index) => (
+            <motion.button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                currentSlide === index ? 'bg-primary h-8' : 'bg-white/30 hover:bg-white/50'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
