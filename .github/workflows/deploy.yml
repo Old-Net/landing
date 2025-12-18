@@ -1,11 +1,9 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Vite Github Pages Deploy
 
 on:
-  # Runs on pushes targeting the default branch (e.g., main or master)
+  # Runs on pushes targeting the default branch
   push:
-    branches: ["master"]
-
+    branches: ["master", "main"]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -15,34 +13,20 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and the next queued run.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: demo
+      url: ${{ steps.deploy_to_pages.outputs.github_pages_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Use a recent Node.js version
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Directory where your build artifacts are located (default for Vite)
-          path: './dist'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/checkout@v3
+      - name: Vite Github Pages Deployer
+        uses: skywarth/vite-github-pages-deployer@master
+        id: deploy_to_pages
