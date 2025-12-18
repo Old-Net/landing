@@ -8,7 +8,7 @@ export default function App() {
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.matchMedia('(min-width: 768px)').matches;
-  });
+  });  
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
